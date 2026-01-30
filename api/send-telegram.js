@@ -22,12 +22,26 @@ module.exports = async (req, res) => {
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
-    res.status(500).json({ ok: false, error: 'Telegram not configured' });
+    res.status(500).json({
+      ok: false,
+      error: 'Telegram not configured. В Vercel → Settings → Environment Variables добавь TELEGRAM_TOKEN и TELEGRAM_CHAT_ID, затем Redeploy.',
+    });
     return;
   }
 
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      res.status(400).json({ ok: false, error: 'Invalid JSON body' });
+      return;
+    }
+  }
+  if (!body || typeof body !== 'object') body = {};
+
   try {
-    const { subject, data = {}, userIP, formOwner, blockedIP } = req.body || {};
+    const { subject, data = {}, userIP, formOwner, blockedIP } = body;
     const parts = [];
     parts.push(`<b>Форма отправки ${formOwner || 'сайта'}:</b> ${subject || 'Заявка'}`);
     if (data.phone) parts.push(`<b>Телефон:</b> ${data.phone}`);
