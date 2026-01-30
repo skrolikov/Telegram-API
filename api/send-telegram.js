@@ -18,6 +18,18 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // IP того, кто дергает API (на Vercel — из заголовков)
+  const forwarded = req.headers['x-forwarded-for'];
+  const clientIP = typeof forwarded === 'string'
+    ? forwarded.split(',')[0].trim()
+    : (req.headers['x-real-ip'] || '').trim();
+
+  const blockedList = (process.env.BLOCKED_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (blockedList.length && clientIP && blockedList.includes(clientIP)) {
+    res.status(403).json({ ok: false, error: 'Forbidden' });
+    return;
+  }
+
   const token = process.env.TELEGRAM_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
