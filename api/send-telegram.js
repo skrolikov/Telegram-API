@@ -53,12 +53,23 @@ module.exports = async (req, res) => {
   if (!body || typeof body !== 'object') body = {};
 
   try {
-    const { subject, data = {}, userIP, formOwner, blockedIP } = body;
+    const { subject, data = {}, userIP: clientSentIP, formOwner, blockedIP } = body;
+    const serverIP =
+      (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '') ||
+      (req.headers['x-real-ip'] || '') ||
+      (req.socket && req.socket.remoteAddress) ||
+      (req.connection && req.connection.remoteAddress) ||
+      '';
+    const userIP = serverIP || clientSentIP || '';
+
     const parts = [];
     parts.push(`<b>Форма отправки ${formOwner || 'сайта'}:</b> ${subject || 'Заявка'}`);
     if (data.phone) parts.push(`<b>Телефон:</b> ${data.phone}`);
     if (data.name) parts.push(`<b>Имя:</b> ${data.name}`);
+    if (data.device) parts.push(`<b>Устройство:</b> ${data.device}`);
     if (data.problem) parts.push(`<b>Проблема:</b> ${data.problem}`);
+    if (data.malfunction) parts.push(`<b>Неисправность:</b> ${data.malfunction}`);
+    if (data.address) parts.push(`<b>Адрес:</b> ${data.address}`);
     if (data.brand) parts.push(`<b>Бренд:</b> ${data.brand}`);
     if (data.question) parts.push(`<b>Вопрос:</b> ${data.question}`);
     if (data.message) parts.push(`<b>Сообщение:</b> ${data.message}`);
